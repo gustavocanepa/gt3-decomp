@@ -17,6 +17,16 @@ It is a sister project of the
 
 - The executable is understood (see [`knowledge/gt3.md`](knowledge/gt3.md)); 5,972 functions are reached by calls.
 <!-- progress:start -->
+- **Progress (October 2026, commit `bdca7f8bde53`): 2,200 of 11,407 functions match (19.3%), 2.8% of the code bytes.**
+  The live numbers are on the `progress` branch (objdiff report format); this paragraph is written by
+  `tools/update_readme.py` from `progress/report.json`, never by hand.
+- **The full build reproduces the original executable** (both loaded segments, SHA-1 checked):
+  2,200 functions, 2.8% of the code bytes, are linked from C/C++
+  source at their original addresses, and the rest is assembled from splat's disassembly of your own
+  executable. 0 of 2,245,743 data bytes (0.00%; `.data` plus `.bss`)
+  are the constants of 0 functions, placed from source at their original addresses.
+  0 functions that were hand-written assembly in the original are listed in
+  [`config/asm_functions.txt`](config/asm_functions.txt) and not counted.
 <!-- progress:end -->
 
 ## Credits
