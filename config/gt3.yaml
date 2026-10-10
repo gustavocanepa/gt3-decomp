@@ -1,0 +1,50 @@
+# splat configuration for CORE.GT3 (Gran Turismo 3: A-Spec, NTSC-U SCUS-97102 v1.00).
+# The "rom" is the executable's memory image, made from your own CORE.GT3 by tools/splat.sh.
+# Everything splat writes (assembly, data, linker script) is generated from your copy of the game
+# and stays out of the repository (build/splat/).
+name: Gran Turismo 3 (CORE.GT3)
+sha1: 8f309e4cf59dcad806ea4a16647f590281b9071a
+options:
+  basename: gt3
+  base_path: ..
+  target_path: build/splat/gt3.rom
+  elf_path: build/splat/gt3.elf
+  platform: ps2
+  compiler: EEGCC
+
+  asm_path: build/splat/asm
+  src_path: build/splat/src
+  build_path: build/splat/obj
+  ld_script_path: build/splat/gt3.ld
+  cache_path: build/splat/.splat_cache
+  symbol_addrs_path:
+    - config/symbol_addrs.txt
+  undefined_funcs_auto_path: build/splat/undefined_funcs_auto.txt
+  undefined_syms_auto_path: build/splat/undefined_syms_auto.txt
+
+  ld_dependencies: False
+  ld_wildcard_sections: True
+  find_file_boundaries: False
+  o_as_suffix: True
+  create_asm_dependencies: False
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+  named_regs_for_c_funcs: False
+
+  section_order: [.text, .data, .rodata, .sdata, .sbss, .bss]
+  auto_link_sections: [.data, .rodata, .sdata, .sbss, .bss]
+
+segments:
+  - name: core
+    type: code
+    start: 0x000000
+    vram: 0x00100000
+    bss_size: 0x0
+    subsegments:
+      - [0x000000, c, core/text]            # code: 0x00100000 - 0x0028e760 (one .s per function)
+      - [0x18E760, pad]                     # zero gap
+      - [0x18E780, data, core/data]         # data: 0x0028e780 - 0x003531e3 (one loaded segment)
+  - [0x2531E3]
