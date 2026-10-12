@@ -83,15 +83,15 @@ typedef s64 M2C_UNK64;
 #endif
 
 s32 func_00286370(s32, s32);                        /* extern */
-s32 D_003520;                                /* extern */
+extern s32 D_00353520;                                /* extern */
 
 s32 func_002840B8(s32 *arg0, s32 arg1, s32 arg2) {
     s32 temp_v0;
 
-    D_003520 = 0;
+    D_00353520 = 0;
     temp_v0 = func_00286370(arg1, arg2);
-    if ((temp_v0 == -1) && (D_003520 != 0)) {
-        *arg0 = D_003520;
+    if ((temp_v0 == -1) && (D_00353520 != 0)) {
+        *arg0 = D_00353520;
     }
     return temp_v0;
 }
