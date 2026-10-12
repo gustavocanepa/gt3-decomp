@@ -18,24 +18,38 @@ as_flags = "-EL -march=r5900 -mabi=eabi"
 objdump_arch = "mips:5900"
 # m2c target triple for the first draft of each function
 m2c_target = "mipsee-gcc-c"
+# GT3 was built with small data (-G8): globals of at most small_data bytes are addressed relative to $gp,
+# whose value the startup code sets (lui/addiu a0, daddu gp,a0 at 0x00100034-0x0010005c).
+gp = 0x3579F0
+small_data = 8
+# the 16-byte callee-save spacing is the whole game's compiler here, not the Sony SDK's (tools/autoloop.py other_compiler)
+sdk_compiler_split = false
 
 [compiler]
 name = "Sony ee-gcc 2.9 (2.9-ee-991111)"
 # GT3 saves callee-saved registers 16 bytes apart, the ee-gcc 2.9 signature (knowledge/gt3.md).
 dir = "~/.local/share/gt4/compilers/ee-gcc2.9-991111"
-command = "{dir}/bin/ee-gcc -c -O2 -G0 -fno-exceptions"
+command = "{dir}/bin/ee-gcc -c -O2 -G0 -fno-exceptions -Iinclude"
 extension = "cpp"
 
 [compilers."ee-gcc2.9-991111"]
 dir = "~/.local/share/gt4/compilers/ee-gcc2.9-991111"
-command = "{dir}/bin/ee-gcc -c -O2 -G0 -fno-exceptions"
+command = "{dir}/bin/ee-gcc -c -O2 -G0 -fno-exceptions -Iinclude"
+archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.9-991111.tar.xz"
+
+# The game's own compiler with small data (-G8): code that addresses globals relative to $gp
+# (tools/match.py gp_rewrite names them D_ADDR for m2c; the judge and build.py resolve the
+# R_MIPS_GPREL16 relocations against [cpu] gp). Globals are declared `extern` with their real size.
+[compilers."ee-gcc2.9-991111-gp"]
+dir = "~/.local/share/gt4/compilers/ee-gcc2.9-991111"
+command = "{dir}/bin/ee-gcc -c -O2 -G8 -fno-exceptions -Iinclude"
 archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.9-991111.tar.xz"
 
 # The project's compiler without strict aliasing: how the game's expat was built (THIRD_PARTY.md,
 # tools/libmatch.py). Same archive as the main compiler, unpacked a second time under this name.
 [compilers."ee-gcc2.96-no-strict-aliasing"]
 dir = "~/.local/share/gt4/compilers/ee-gcc2.96-no-strict-aliasing"
-command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-strict-aliasing"
+command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-strict-aliasing -Iinclude"
 archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.96.tar.xz"
 
 # The project's compiler with the SGI STL headers (include/stl, gcc 2000-10-03's libstdc++ v2, see
@@ -44,7 +58,7 @@ archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-
 # (tools/stl.py). Same archive as the main compiler, unpacked a second time under this name.
 [compilers."ee-gcc2.96-stl"]
 dir = "~/.local/share/gt4/compilers/ee-gcc2.96-stl"
-command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-strict-aliasing -fno-implicit-templates -Iinclude/stl -Iinclude/shim"
+command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-strict-aliasing -fno-implicit-templates -Iinclude/stl -Iinclude/shim -Iinclude"
 archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.96.tar.xz"
 
 [model]
@@ -57,13 +71,13 @@ knowledge = ["knowledge/ee-gcc-2.96.md", "knowledge/gt3.md"]
 # struct copy between lock/unlock calls). Same archive as the main compiler, unpacked again.
 [compilers."ee-gcc2.96-nsa-nosib"]
 dir = "~/.local/share/gt4/compilers/ee-gcc2.96-nsa-nosib"
-command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-strict-aliasing -fno-optimize-sibling-calls"
+command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-strict-aliasing -fno-optimize-sibling-calls -Iinclude"
 archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.96.tar.xz"
 
 # The game's flags without sibling calls, for translation units whose tail calls are jal + epilogue.
 [compilers."ee-gcc2.96-nosib"]
 dir = "~/.local/share/gt4/compilers/ee-gcc2.96-nosib"
-command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-optimize-sibling-calls"
+command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-optimize-sibling-calls -Iinclude"
 archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.96.tar.xz"
 
 # Code assembled with a later EE binutils, the one in Sony's ee-gcc 3.2 (2004-09-21) toolchain, while
@@ -75,13 +89,13 @@ archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-
 # assembler does not (build/auto/as_test.py), so this is a per-object property, not a project one.
 [compilers."ee-gcc2.96-nsa-nosib-as2004"]
 dir = "~/.local/share/gt4/compilers/ee-gcc2.96-nsa-nosib"
-command = "bash {tools}/cc_as.sh \"$HOME/.local/share/gt4/compilers/ee-gcc3.2-040921/bin/ee-as\" \"{dir}/bin/ee-gcc -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-strict-aliasing -fno-optimize-sibling-calls\""
+command = "bash {tools}/cc_as.sh \"$HOME/.local/share/gt4/compilers/ee-gcc3.2-040921/bin/ee-as\" \"{dir}/bin/ee-gcc -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-strict-aliasing -fno-optimize-sibling-calls -Iinclude\""
 archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.96.tar.xz"
 needs = { "ee-gcc3.2-040921" = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc3.2-040921.tar.xz" }
 
 [compilers."ee-gcc2.96-as2004"]
 dir = "~/.local/share/gt4/ee-gcc2.96"
-command = "bash {tools}/cc_as.sh \"$HOME/.local/share/gt4/compilers/ee-gcc3.2-040921/bin/ee-as\" \"{dir}/bin/ee-gcc -B {dir}/bin/ee- -O2 -G0 -fno-exceptions\""
+command = "bash {tools}/cc_as.sh \"$HOME/.local/share/gt4/compilers/ee-gcc3.2-040921/bin/ee-as\" \"{dir}/bin/ee-gcc -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -Iinclude\""
 archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.96.tar.xz"
 needs = { "ee-gcc3.2-040921" = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc3.2-040921.tar.xz" }
 
@@ -90,7 +104,7 @@ needs = { "ee-gcc3.2-040921" = "https://github.com/decompme/compilers/releases/d
 # calls, which only -fno-gcse reproduces (found on 0x004a0690: 23 -> 3 differing instructions).
 [compilers."ee-gcc2.96-nogcse"]
 dir = "~/.local/share/gt4/ee-gcc2.96"
-command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-gcse"
+command = "{dir}/bin/ee-gcc -c -B {dir}/bin/ee- -O2 -G0 -fno-exceptions -fno-gcse -Iinclude"
 archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.96.tar.xz"
 
 # EXPERIMENTAL (opus-regmap, 2026-10-10): the game's flags without the first scheduling pass

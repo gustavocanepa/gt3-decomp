@@ -70,6 +70,8 @@ def plain(words):
 def other_compiler(words):
     """True for code built by another compiler (the Sony SDK libraries): its prologue saves the
     callee-saved registers 16 bytes apart, where the game's ee-gcc 2.96 packs them 8 apart."""
+    if not project.CONFIG["cpu"].get("sdk_compiler_split", True):
+        return False  # the whole game was built by that compiler (GT3): nothing is "another" one
     offsets = []
     for x in words[:16]:
         if x >> 26 == 0x3F and (x >> 21) & 31 == 29:  # sd $rt, off($sp)

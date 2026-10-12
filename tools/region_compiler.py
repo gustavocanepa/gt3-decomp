@@ -9,6 +9,7 @@ function of a range with a compiler named in project.toml [compilers]; matches k
 `/* compiler: NAME */` marker on their first line, so match.py, build.py and CI use it too.
 
     region_compiler.py solve --compiler NAME --lo 0x5547e8 [--hi 0x700000] [-jN] [--max-bytes 2048] [--limit N]
+    region_compiler.py solve --compiler ee-gcc2.9-991111-gp --gp -j3     the functions that use $gp (small data)
     region_compiler.py stats --compiler NAME
 
 Results: build/auto/region/NAME/results.jsonl (resumable).
@@ -38,14 +39,15 @@ def setup(compiler):
     return out
 
 
-def functions(lo, hi, max_bytes):
-    """[(addr, size)] unmatched in [lo, hi), not hand-written assembly, not ee-gcc 2.9 code."""
+def functions(lo, hi, max_bytes, gp_only=False):
+    """[(addr, size)] unmatched in [lo, hi), not hand-written assembly, not ee-gcc 2.9 code;
+    gp_only: only those that address memory relative to $gp (small data, project.toml [cpu] gp)."""
     done = autoloop.done_addrs()
     asm_only = inventory.asm_functions()
     out = []
     for a, w in families.function_words():
         if lo <= a < hi and a not in done and a not in asm_only and len(w) * 4 <= max_bytes \
-                and not autoloop.other_compiler(w):
+                and not autoloop.other_compiler(w) and (not gp_only or match.uses_gp(w)):
             out.append((a, len(w) * 4))
     return sorted(out, key=lambda x: x[1])
 
@@ -54,7 +56,7 @@ def solve_one(addr):
     try:
         row = cpu_solve.attempt(addr, out=cpu_solve.OUT)
         if row.get("result") == "differs":
-            _, ok, _ = near_fix.attempt(addr)
+            _, ok, *_ = near_fix.attempt(addr)
             if ok:
                 row = dict(row, result="match", how="near_fix")
     except Exception as e:  # one bad function must not stop the run
@@ -71,6 +73,7 @@ def main():
     ap.add_argument("-j", "--jobs", type=int, default=2)
     ap.add_argument("--max-bytes", type=int, default=2048)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--gp", action="store_true", help="only functions that use $gp (use the -G8 compiler)")
     a = ap.parse_args()
     out = setup(a.compiler)
     results = os.path.join(out, "results.jsonl")
@@ -82,7 +85,7 @@ def main():
         print(by)
         return
     tried = {r["addr"] for r in rows}
-    todo = [x for x, _ in functions(a.lo, a.hi, a.max_bytes) if f"{x:08x}" not in tried]
+    todo = [x for x, _ in functions(a.lo, a.hi, a.max_bytes, a.gp) if f"{x:08x}" not in tried]
     if a.limit:
         todo = todo[:a.limit]
     print(f"{len(todo)} functions in {a.lo:#x}-{a.hi:#x} with {a.compiler}", flush=True)

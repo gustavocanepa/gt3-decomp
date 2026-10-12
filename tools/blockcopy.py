@@ -301,7 +301,7 @@ def attempt(addr, compiler, verbose=False):
             break
     open(path, "w", newline="\n").write(cpu_solve.PRELUDE + best[2])
     if 0 < best[0] <= 8:
-        _, ok, _ = near_fix.attempt(addr)
+        _, ok, *_ = near_fix.attempt(addr)
         if ok:
             best = (0, best[1] + "+near_fix", None)
     if best[0] == 0:

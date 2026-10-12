@@ -431,6 +431,8 @@ done
                 m = re.match(r"\s*(\w+)\s*=\s*(0x[0-9A-Fa-f]+);", line)
                 if m:
                     syms.append(f"PROVIDE({m.group(1)} = {m.group(2)});")
+    if project.CONFIG["cpu"].get("gp") is not None:  # small data: R_MIPS_GPREL16 is relative to this
+        syms.append(f"_gp = 0x{project.CONFIG['cpu']['gp']:08x};")
     body = []
     for kind, addr in order:
         if kind == "gap":

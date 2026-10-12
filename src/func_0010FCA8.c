@@ -1,0 +1,13 @@
+/* compiler: ee-gcc2.9-991111-gp */
+#include "types.h"
+#define NULL 0
+void *memcpy(void *, const void *, unsigned int);
+#include "m2c_macros.h"
+
+extern s32 D_0035274C;
+extern s32 D_00352750;
+
+void func_0010FCA8(M2C_UNK arg0, M2C_UNK arg1, M2C_UNK arg2, M2C_UNK arg3, M2C_UNK arg4, M2C_UNK arg5, M2C_UNK arg6) {
+    D_00352750 = 0;
+    D_0035274C = 0;
+}

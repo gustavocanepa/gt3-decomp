@@ -161,7 +161,7 @@ def solve_one(addr):
     row = cpu_solve.attempt(addr, out=OUT)
     if row.get("result") == "differs":
         try:
-            _, ok, tries = near_fix.attempt(addr)
+            _, ok, tries, *_ = near_fix.attempt(addr)
         except Exception as e:  # one bad draft must not stop the run
             ok, tries = False, 0
         if ok:

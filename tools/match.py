@@ -183,6 +183,10 @@ def link_words(words, srelocs, foff, addr):
             imm = w & 0xFFFF
             v = s_addr + (imm - 0x10000 if imm & 0x8000 else imm)
             out[i] = (w & 0xFFFF0000) | (v & 0xFFFF)
+        elif rel[0] == R_MIPS_GPREL16 and GP is not None:
+            imm = w & 0xFFFF
+            v = s_addr + (imm - 0x10000 if imm & 0x8000 else imm) - GP
+            out[i] = (w & 0xFFFF0000) | (v & 0xFFFF)
         else:
             unresolved.add(off)
     return out, unresolved
@@ -272,11 +276,48 @@ def gnu_asm(addr, count=None):
 EE_NAMES = {f"t{i}": f"a{i + 4}" if i < 4 else f"t{i - 4}" for i in range(8)}
 
 
+GP_MEM = re.compile(r"(?<![\w%])(-?0x[0-9A-Fa-f]+|-?\d+)\(\$gp\)")
+GP_ADDIU = re.compile(r"^(\s*/\* [0-9A-F]{8} [0-9A-F]{8} \*/\s+d?addiu\s+\$\w+,\s*)\$gp,\s*(-?0x[0-9A-Fa-f]+|-?\d+)\s*$")
+GP = project.CONFIG["cpu"].get("gp")  # the small-data base ($gp) of a game built with -G8; None for -G0 games
+
+
+def gp_symbol(offset):
+    """The global a $gp-relative operand stands for: the small-data base plus the signed offset."""
+    return f"D_{GP + offset:08X}"
+
+
+def gp_rewrite(asm):
+    """gnu_asm text with every `off($gp)` operand spelled `%gp_rel(D_ADDR)($gp)` (and `addiu rt, $gp,
+    off` as `addiu rt, $gp, %gp_rel(D_ADDR)`), ADDR = $gp + off. m2c does not know the value of $gp,
+    so it read the base as an unset register (`saved_reg_gp`); with the symbol it names the global,
+    and the draft compiles with -G8 (project.toml [cpu] gp, small_data) back into the same access."""
+    if GP is None:
+        return asm
+    out = []
+    for line in asm.splitlines():
+        m = GP_ADDIU.match(line)
+        if m:
+            line = f"{m.group(1)}$gp, %gp_rel({gp_symbol(int(m.group(2), 0))})"
+        else:
+            line = GP_MEM.sub(lambda mm: f"%gp_rel({gp_symbol(int(mm.group(1), 0))})($gp)", line)
+        out.append(line)
+    return "\n".join(out) + "\n"
+
+
+def uses_gp(words):
+    """True when an instruction addresses memory relative to $gp (the code was built with -G8)."""
+    for w in words:
+        op, rs = w >> 26, (w >> 21) & 31
+        if rs == 28 and (0x20 <= op <= 0x2E or op in (0x09, 0x19, 0x31, 0x39, 0x35, 0x3D, 0x1E, 0x1F, 0x36, 0x3E, 0x37, 0x3F)):
+            return True
+    return False
+
+
 def m2c_asm(addr, count=None):
     """gnu_asm with the EE's register names for m2c's mipsee target: rabbitizer prints o32 names,
     where $8-$11 are $t0-$t3, but on the EE they are the argument registers $a4-$a7 (and $12-$15
     are $t0-$t3). Fed o32 names, m2c lost arguments 5-8 ("Read from unset register $t0")."""
-    return re.sub(r"\$(t[0-7])\b", lambda m: "$" + EE_NAMES[m.group(1)], with_jump_tables(gnu_asm(addr, count)))
+    return re.sub(r"\$(t[0-7])\b", lambda m: "$" + EE_NAMES[m.group(1)], gp_rewrite(with_jump_tables(gnu_asm(addr, count))))
 
 
 def read_word(vaddr):
