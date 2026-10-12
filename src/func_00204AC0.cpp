@@ -1,0 +1,17 @@
+typedef unsigned int u32;
+
+extern "C" void func_001FECE8();
+extern "C" void func_0027C3E8(void *a0, void *a1, void *a2);
+
+extern char D_0033EA30[];
+extern int D_004B28B0;
+
+extern int D_004B2920;
+
+extern "C" void *func_00204AC0(void) {
+    if (D_004B2920 == 0) {
+        func_001FECE8();
+        func_0027C3E8(&D_004B2920, D_0033EA30, &D_004B28B0);
+    }
+    return &D_004B2920;
+}
