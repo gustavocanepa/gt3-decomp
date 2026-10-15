@@ -64,7 +64,7 @@ archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-
 [model]
 # Facts given to the model with every function: the compiler's habits (shared by every game built
 # with it) and this game's own idioms.
-knowledge = ["knowledge/ee-gcc-2.96.md", "knowledge/gt3.md"]
+knowledge = ["knowledge/ee-gcc-2.9.md", "knowledge/gt3.md"]
 
 # Library code built with -fno-strict-aliasing AND without sibling calls: functions whose last
 # call is a jal followed by the epilogue where a `j` would be possible (found on 0x0055a2b8, a
