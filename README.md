@@ -31,6 +31,11 @@ It is a sister project of the
   [`config/asm_functions.txt`](config/asm_functions.txt) and not counted.
 <!-- progress:end -->
 
+## Related projects
+
+- **[GT4 decompilation](https://github.com/gustavocanepa/gt4-decomp)** reconstructs the next engine generation and provides matching source code for the separate **[GT4 Native](https://github.com/gustavocanepa/gt4-native)** PC-port effort.
+- **GT4 Native is experimental and not playable.** Matching PS2 code is a prerequisite for portability work, not a native executable by itself. This GT3 repository remains a matching decompilation project; no playable GT3 PC port is claimed here.
+
 ## Credits
 
 Started and maintained by **Gustavo Canepa** ([@gustavocanepa](https://github.com/gustavocanepa)),
@@ -43,6 +48,10 @@ This license covers the tools, documentation and the source code written for thi
 Gran Turismo is a trademark of Sony Interactive Entertainment; this project is not affiliated
 with or endorsed by Sony Interactive Entertainment or Polyphony Digital. It contains no game data,
 and you need your own copy of the game to use it.
+
+## Support
+
+[GitHub Sponsors is active](https://github.com/sponsors/gustavocanepa). Contributions and sponsorship are voluntary; sponsorship does not provide copyrighted game files or guarantee a release.
 
 ## Contributing
 
