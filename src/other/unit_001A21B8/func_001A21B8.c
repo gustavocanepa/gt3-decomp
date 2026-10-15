@@ -1,3 +1,4 @@
+/* compiler: ee-gcc2.9-991111 */
 #include "types.h"
 #define NULL 0
 void *memcpy(void *, const void *, unsigned int);
