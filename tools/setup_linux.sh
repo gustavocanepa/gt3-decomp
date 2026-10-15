@@ -10,13 +10,14 @@ sudo dpkg --add-architecture i386 2>/dev/null || true
 sudo apt-get update -qq
 sudo apt-get install -y -qq binutils-mips-linux-gnu libc6:i386 python3-toml python3-levenshtein >/dev/null
 
-echo "== ee-gcc 2.96 (decomp.me build)"
-if [ ! -x "$base/ee-gcc2.96/bin/ee-gcc" ]; then
-    mkdir -p "$base/ee-gcc2.96"
-    curl -sL https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.96.tar.xz \
-        | tar -xJ -C "$base/ee-gcc2.96"
+echo "== ee-gcc 2.9 (GT3 default, decomp.me build)"
+compiler_dir="$base/compilers/ee-gcc2.9-991111"
+if [ ! -x "$compiler_dir/bin/ee-gcc" ]; then
+    mkdir -p "$compiler_dir"
+    curl -fLsS https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.9-991111.tar.xz \
+        | tar -xJ -C "$compiler_dir"
 fi
-"$base/ee-gcc2.96/bin/ee-gcc" --version | head -1
+"$compiler_dir/bin/ee-gcc" --version | head -1
 
 echo "== decomp-permuter"
 if [ ! -d "$base/decomp-permuter" ]; then
