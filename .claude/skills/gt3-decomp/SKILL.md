@@ -5,9 +5,9 @@ description: Compact orientation for working on the Gran Turismo 3: A-Spec match
 
 # Gran Turismo 3: A-Spec decomp in five minutes
 
-Gran Turismo 3: A-Spec is built on Gran Turismo 4's code base, same compiler; the tools are GT4's
-(github.com/gustavocanepa/gt4-decomp, cloned next to this repository as ../GT4). Before writing a function from scratch, look for its GT4 counterpart: an
-identical or near-identical GT4 source usually matches after renaming callees and globals.
+Gran Turismo 3: A-Spec predates Gran Turismo 4 and uses an older compiler (ee-gcc 2.9 vs GT4's ee-gcc 2.96); the tools are GT4's
+(github.com/gustavocanepa/gt4-decomp, cloned next to this repository as ../GT4). Before writing a function from scratch, look for its GT4 counterpart: a
+similar GT4 source can guide reconstruction, but different compiler versions mean it must be re-matched and cannot be assumed byte-identical.
 
 **Goal:** C/C++ in `src/` that compiles, with the original compiler, to byte-identical code. A
 function counts only when the judge says MATCH and the full build still hashes like the original.
@@ -21,11 +21,12 @@ function counts only when the judge says MATCH and the full build still hashes l
   `wsl -e sh -c "ps aux | grep build.py"` first).
 
 ## Compilers (first-line marker `/* compiler: NAME */`, entries in project.toml)
-- default: ee-gcc 2.96 `-O2 -G0 -fno-exceptions` — the game's own code (mostly C++).
+- default: ee-gcc 2.9 (`ee-gcc2.9-991111`) `-O2 -G0 -fno-exceptions` — GT3's own code.
 - `ee-gcc2.96-no-strict-aliasing` — Sony's libraries (libstdc++ basic_string, expat, most of the
   library region 0x5547e8+). Try it first on any library near miss.
 - `ee-gcc2.96-stl` — SGI STL template instantiations (`include/stl`, tools/stl.py).
-- `ee-gcc2.9-991111` — ~270 SDK functions saving registers 16 bytes apart (tools/other_compiler.py).
+- `ee-gcc2.9-991111-gp` — same compiler with `-G8` for functions using small-data globals relative to `$gp`.
+- 16-byte callee-save spacing is normal in GT3, not an SDK-only signature. Do not filter those functions as another compiler.
 - Hand-written assembly (MMI strlen, kernel stubs) is listed in config/asm_functions.txt: not a target.
 
 ## Where things are
@@ -70,7 +71,7 @@ function counts only when the judge says MATCH and the full build still hashes l
 - m2c: always feed match.m2c_asm (EE names: $8-$11 are arguments 5-8); write float literals in hex.
 
 ## Knowledge map (read only the part you need)
-- knowledge/ee-gcc-2.96.md — compiler rules (how C shapes compile).
+- knowledge/ee-gcc-2.9.md — GT3 compiler-specific guidance. Do not apply ee-gcc 2.96 scheduling/register-allocation rules by default.
 - knowledge/gt3.md — this executable and its overlap with GT4; ../GT4/knowledge/gt4.md — project rules: C++/STL/string/handles/registration, open problems.
 - knowledge/architecture.md, classes.md, script-engine.md, runtime-types.md — what the game code is.
 - knowledge/coverage-map.md — what is matched and missing, by unit.
