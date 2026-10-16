@@ -35,8 +35,11 @@ OUT = os.path.join(ROOT, "build", "auto", "local")
 RESULTS = os.path.join(OUT, "results.jsonl")
 OLLAMA = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 
-SYSTEM = """You fix C code so that it compiles to exactly the same MIPS machine code as the original.
-Compiler: ee-gcc 2.96 (PlayStation 2), flags -O2 -G0, compiled as C. You see the original assembly,
+SYSTEM = f"""You fix C code so that it compiles to exactly the same MIPS machine code as the original.
+Project compiler: {project.CONFIG['compiler']['name']} (PlayStation 2).
+Default compile command: {project.compiler_command()}.
+An explicit first-line compiler profile overrides that default.
+You see the original assembly,
 the current C, and the judge's diff (left: original, right: compiled from the current C; `!` marks
 differing instructions). Rules that matter for this compiler:
 - Keep the function name, the externs and the parameter registers ($a0 = first argument, ...).

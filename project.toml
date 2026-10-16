@@ -30,6 +30,7 @@ name = "Sony ee-gcc 2.9 (2.9-ee-991111)"
 # GT3 saves callee-saved registers 16 bytes apart, the ee-gcc 2.9 signature (knowledge/gt3.md).
 dir = "~/.local/share/gt4/compilers/ee-gcc2.9-991111"
 command = "{dir}/bin/ee-gcc -c -O2 -G0 -fno-exceptions -Iinclude"
+archive = "https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.9-991111.tar.xz"
 extension = "cpp"
 
 [compilers."ee-gcc2.9-991111"]
