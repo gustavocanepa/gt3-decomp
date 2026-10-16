@@ -17,25 +17,29 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Compiler dispatch regression checks
+        run: python -m unittest discover -s tests
       - name: No assembly posing as C
         run: find src -type f \( -name '*.c' -o -name '*.cpp' \) -print0 | xargs -0 python tools/asm_policy.py
       - name: Sources are where tools/layout.py puts them, with their real names
         run: python tools/organize.py --check
-      - name: Compiler (ee-gcc 2.96, decomp.me build)
+      - name: Project compiler (project.toml [compiler])
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update -qq
           sudo apt-get install -y -qq libc6:i386 binutils-mips-linux-gnu
-          mkdir -p ~/.local/share/gt4/ee-gcc2.96
-          curl -sL https://github.com/decompme/compilers/releases/download/compilers/ee-gcc2.96.tar.xz \
-            | tar -xJ -C ~/.local/share/gt4/ee-gcc2.96
+          d=$(python3 -c "import tomllib,os; print(os.path.expanduser(tomllib.load(open('project.toml','rb'))['compiler']['dir']))")
+          url=$(python3 -c "import tomllib; print(tomllib.load(open('project.toml','rb'))['compiler']['archive'])")
+          mkdir -p "$d"
+          curl -fsSL "$url" | tar -xJ -C "$d"
       - name: Other compilers named by sources (project.toml [compilers], decomp.me builds)
         run: |
           find src -type f \( -name '*.c' -o -name '*.cpp' \) > /tmp/sources.txt
           for name in $(xargs -a /tmp/sources.txt head -qn1 | sed -n 's|^/\* compiler: \([^ ]*\) \*/.*|\1|p' | sort -u); do
             url=$(python3 -c "import tomllib,sys; print(tomllib.load(open('project.toml','rb'))['compilers'][sys.argv[1]]['archive'])" "$name")
-            mkdir -p ~/.local/share/gt4/compilers/"$name"
-            curl -sL "$url" | tar -xJ -C ~/.local/share/gt4/compilers/"$name"
+            d=$(python3 -c "import tomllib,sys,os; print(os.path.expanduser(tomllib.load(open('project.toml','rb'))['compilers'][sys.argv[1]]['dir']))" "$name")
+            mkdir -p "$d"
+            curl -fsSL "$url" | tar -xJ -C "$d"
             echo "installed $name"
             # tools a profile needs besides its compiler (e.g. a later assembler), by name and archive
             python3 -c "import tomllib,sys; [print(k, v) for k, v in tomllib.load(open('project.toml','rb'))['compilers'][sys.argv[1]].get('needs', {}).items()]" "$name" |
@@ -45,15 +49,17 @@ jobs:
                 curl -sL "$url" | tar -xJ -C ~/.local/share/gt4/compilers/"$need" && echo "installed $need (needed by $name)"
               done
           done
-      - name: Every source compiles (with the compiler its first line names, else ee-gcc 2.96)
+      - name: Every source compiles (first-line profile, otherwise project.toml [compiler])
         run: |
-          d=~/.local/share/gt4/ee-gcc2.96
-          default="$d/bin/ee-gcc -c -B $d/bin/ee- -O2 -G0 -fno-exceptions"
           python3 - > /tmp/commands.txt <<'EOF'
-          import tomllib, os
-          for name, c in tomllib.load(open("project.toml", "rb")).get("compilers", {}).items():
-              print(name, c["command"].replace("{dir}", os.path.expanduser(c["dir"])).replace("{tools}", os.path.abspath("tools")))
+          import pathlib, sys
+          sys.path.insert(0, "tools")
+          import project
+          pathlib.Path("/tmp/default-command.txt").write_text(project.compiler_command() + "\n")
+          for name in project.compilers():
+              print(name, project.compiler_command(name))
           EOF
+          default=$(cat /tmp/default-command.txt)
           mkdir -p /tmp/obj
           fail=0
           n=0
