@@ -17,13 +17,13 @@ It is a sister project of the
 
 - The executable is understood (see [`knowledge/gt3.md`](knowledge/gt3.md)); 5,972 functions are reached by calls.
 <!-- progress:start -->
-- **Progress (October 2026, commit `b5244e3c0a6e`): 3,557 of 11,407 functions match (31.2%), 6.3% of the code bytes; 8.5% of the sources are clean.**
-  Clean source: 8.5% of the 3,557 function sources are free of m2c
+- **Progress (October 2026, commit `f665f6a6dcf0`): 3,705 of 11,407 functions match (32.5%), 6.9% of the code bytes; 11.3% of the sources are clean.**
+  Clean source: 11.3% of the 3,705 function sources are free of m2c
   macros, raw offset casts, temp_/var_ names and pasted headers (`tools/clean_report.py`).
   The live numbers are on the `progress` branch (objdiff report format); this paragraph is written by
   `tools/update_readme.py` from `progress/report.json`, never by hand.
 - **The full build reproduces the original executable** (both loaded segments, SHA-1 checked):
-  3,533 functions, 6.2% of the code bytes, are linked from C/C++
+  3,680 functions, 6.8% of the code bytes, are linked from C/C++
   source at their original addresses, and the rest is assembled from splat's disassembly of your own
   executable. 0 of 2,245,743 data bytes (0.00%; `.data` plus `.bss`)
   are the constants of 0 functions, placed from source at their original addresses.
