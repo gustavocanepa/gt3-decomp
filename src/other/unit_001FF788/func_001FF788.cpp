@@ -1,4 +1,4 @@
-typedef int s32;
+#include "types.h"
 
 void func_001FF788(s32 *arg0) {
     arg0[1] = 0;
