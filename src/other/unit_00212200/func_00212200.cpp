@@ -1,4 +1,4 @@
-typedef int s32;
+#include "types.h"
 
 s32 func_00212200(s32 *arg0, s32 arg1) {
     arg0 += arg1;

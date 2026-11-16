@@ -1,5 +1,4 @@
-typedef long long s64;
-typedef int s32;
+#include "types.h"
 
 s64 func_00212098(char *arg0, s32 arg1) {
     arg0 += arg1 * 8;
